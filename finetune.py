@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 import torch
 from transformers import TrainingArguments, TrainerState, TrainerControl
-from trl import DPOConfig, DPOTrainer
+from trl import DPOConfig, DPOTrainer, CPOTrainer, CPOConfig
 
 from datasets import Dataset
 
@@ -256,7 +256,7 @@ def finetune(
 
     train_dataset = DPODataset(args, tokenizer, train_data)
 
-    training_args = DPOConfig(
+    training_args = CPOConfig(
         num_train_epochs=num_epochs,
         per_device_train_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=gradient_accumulation_steps,
@@ -276,12 +276,20 @@ def finetune(
         gradient_checkpointing_kwargs={"use_reentrant": False},  # 얘는 위에거랑 세트
     )
 
-    trainer = DPOTrainer(
+    # trainer = DPOTrainer(
+    #     model=model,
+    #     args=training_args,
+    #     peft_config=peft_config,
+    #     processing_class=tokenizer,
+    #     train_dataset=train_dataset,
+    # )
+
+    trainer = CPOTrainer(
         model=model,
         args=training_args,
-        peft_config=peft_config,
-        processing_class=tokenizer,
         train_dataset=train_dataset,
+        tokenizer=tokenizer,
+        peft_config=peft_config,
     )
 
     model.config.use_cache = False  # silence the warnings. Please re-enable for inference! -> 필요한지 잘 모르겠음. 대세엔 영향 없어보이긴 함
